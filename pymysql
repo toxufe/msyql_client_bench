@@ -1,0 +1,164 @@
+pymysql是python3连接mysql操作的库，在python2中使用的是mysqldb
+
+1.基础操作
+
+创建连接
+
+import pymysql
+
+db_conn = pymysql.connect(
+    host="你的数据库地址",
+    user="用户名",
+    port=3306,
+    password="密码",
+    database="数据库名",
+    charset="utf8")
+
+# 得到一个可以执行SQL语句的光标对象
+cursor = conn.cursor()  # 执行完毕返回的结果集默认以元组显示
+# 得到一个可以执行SQL语句并且将结果作为字典返回的游标
+# cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
+
+# 定义要执行的sql语句
+sql = """
+CREATE TABLE USER1 (
+id INT auto_increment PRIMARY KEY ,
+name CHAR(10) NOT NULL UNIQUE,
+age TINYINT NOT NULL
+)ENGINE=innodb DEFAULT CHARSET=utf8;  #注意：charset='utf8' 不能写成utf-8
+"""
+
+# 执行
+res=cursor.execute(sql)
+sql = 'select * from user1 where name = %s and age=%d'
+name = "zhangchen"
+age = 28
+# execute函数可以加格式化字符参数
+res = cursor.execute(sql, [name, age])
+print(res)
+
+# 执行结束后要关闭光标和连接
+cursor.close()
+db_conn.close()
+2.增删改查
+
+插入多条数据
+
+import pymysql
+ 
+conn = pymysql.connect(
+    host='192.168.0.103',
+    port=3306,
+    user='root',
+    password='123',
+    database='xing',
+    charset='utf8'
+)
+# 获取一个光标
+cursor = conn.cursor()
+ 
+# 定义要执行的sql语句
+sql = 'insert into userinfo(name,age) values(%s,%d);'
+data = [
+    ('july', 14),
+    ('june', 25),
+    ('marin', 36)
+]
+# 拼接并执行sql语句
+cursor.executemany(sql, data)
+ 
+# 涉及写操作要注意提交
+conn.commit()
+ 
+# 关闭连接
+cursor.close()
+conn.close()
+插入单条数据
+
+sql ='insert into userinfo (user,pwd) values (%s,%d);'
+ 
+name = 'zhangchen'
+pwd = 28
+cursor.execute(sql, [name, pwd])
+conn.commit()
+cursor.close()
+conn.close()
+获取最后一行的数据（可以理解为最新插入的数据）
+
+# 定义将要执行的SQL语句
+sql = "insert into user1 (name, age) values (%s, %d);"
+name = "zhangchen"
+pwd = 28
+# 并执行SQL语句
+cursor.execute(sql, [name, age])
+# 涉及写操作注意要提交
+conn.commit()
+
+# 获取最新的那一条数据的ID
+last_id = cursor.lastrowid
+print("最后一条数据的ID是:", last_id)
+
+# 关闭连接
+cursor.close()
+conn.close()
+删除操作
+
+# 定义将要执行的SQL语句
+sql = "delete from user1 where name=%s;"
+name = "june"
+# 拼接并执行SQL语句
+cursor.execute(sql, [name])
+# 涉及写操作注意要提交
+conn.commit()
+# 关闭连接
+ 
+cursor.close()
+conn.close()
+更改数据
+
+sql = "update user1 set age=%d where name=%s;"
+# 拼接并执行SQL语句
+cursor.execute(sql, [18, "zhangchen"])
+ 
+# 涉及写操作注意要提交
+conn.commit()
+ 
+# 关闭连接
+cursor.close ()
+conn.close ()
+查询数据
+
+# 获取一个光标
+cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)  # 返回字典数据类型
+
+# 定义将要执行的sql语句
+sql = 'select name,age from user1;'
+# 执行sql语句
+cursor.execute(sql)
+
+# 取到查询结果
+ret1 = cursor.fetchone()  # 取一条
+ret2 = cursor.fetchmany(3)  # 取三条
+ret3 = cursor.fetchone()  # 取一条
+
+# 光标按绝对位置移动1
+cursor.scroll(1, mode="absolute")
+# 光标按照相对位置(当前位置)移动1
+cursor.scroll(1, mode="relative")
+数据回滚
+
+try:
+    # 拼接并执行SQL语句
+    cursor.execute(sql1, [name, age])
+    print(sql1)
+    cursor.execute(sql2, [id, hobby])  # 报错的SQL语句
+    # 涉及写操作注意要提交
+    conn.commit()
+except Exception as e:
+    print(str(e))
+    # 有异常就回滚
+    conn.rollback()
+
+# 关闭连接
+cursor.close()
+conn.close()
